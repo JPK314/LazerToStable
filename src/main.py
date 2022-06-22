@@ -68,7 +68,7 @@ def main():
                         matchingsliders = [x[1] for x in sliders if x[0] == line]
                         if matchingsliders:
                             s = matchingsliders[0]
-                            FDW.write("%d,%d,%d,%d,%d,B|%s,%d,%f\n" % (s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]))
+                            FDW.write("%d,%d,%d,%d,%d,B|%s,%d,%f,%s" % (s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], s[8]))
                         else:
                             FDW.write(line)
                         
