@@ -6,7 +6,6 @@ from src.SliderPath import SliderPath
 from src.BezierConverter import ConvertToBezierAnchors
 
 def main():
-    
     for file in os.listdir("."):
         if file.endswith(".osu"):
             FD = open(file, 'r', encoding="utf8")
@@ -46,12 +45,12 @@ def main():
                         sliders.append([line, processSlider(xpos, ypos, time, objType, hitSound, positionsString, repeats, length, rest, formatVersion)])
                         
                         
-            
             # Making new .osu file
             FDW = open(file[:-5]+"-STABLE].osu", 'w', encoding="utf8")
+            FDW.write("osu file format v14\n")
             unchangedline = True
             insideHOs = False
-            for line in lines:
+            for line in lines[1:]:
                 unchangedline = True
                 if line == "[HitObjects]\n":
                     insideHOs = True
@@ -225,5 +224,5 @@ def convertPathString(pointString, offset, formatVersion):
         
     return segmentsControlPoints
         
-
-if __name__=="__main__": main()
+if __name__ == "__main__":
+    main()
