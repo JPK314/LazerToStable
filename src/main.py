@@ -50,15 +50,27 @@ def main():
             FDW.write("osu file format v14\n")
             unchangedline = True
             insideHOs = False
+            insideTPs = False
             for line in lines[1:]:
                 unchangedline = True
+                if line == "[Timing Points]\n":
+                    insideTPs = True
+                    FDW.write(line)
+                    continue
+                if insideTPs and line == "\n":
+                    insideTPs = False
                 if line == "[HitObjects]\n":
                     insideHOs = True
                     FDW.write(line)
                     continue
                 if insideHOs and line == "\n":
                     insideHOs = False
-                    
+                
+                if insideTPs:
+                    strspl = line.split(",")
+                    unchangedline = False
+                    FDW.write("%d,%s" % (int(numpy.floor(float(strspl[0]))), ",".join(strspl[1:])))
+                
                 if insideHOs:
                     strspl = line.split(",")
                     objType = clamp(int(strspl[3]), 131072)
