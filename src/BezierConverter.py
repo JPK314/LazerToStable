@@ -80,6 +80,9 @@ def ConvertCircleToBezierAnchors(points):
                       (numpy.sin(cs["ThetaStart"]), numpy.cos(cs["ThetaStart"]) * cs["Direction"])), dtype='double')
     for i in range(len(arc)):
         arc[i] = numpy.dot(rot, arc[i]) + cs["Centre"]
+        
+    # To fix some errors, set the last point of arc to the last point of points
+    arc[-1] = points[-1]
     return arc
     
 def ConvertCatmullToBezierAnchors(points):
