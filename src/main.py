@@ -39,9 +39,6 @@ def main():
                                 length = None
                         
                         rest = ",".join(strspl[8:])
-                        
-                        # The value passed to bpm isn't actually just the bpm - it's the bpm times the current sv multiplier, or what the bpm would have to be if the sv multiplier were 1  at that point.
-                        # The way I'm getting this is very ugly but it does work
                         sliders.append([line, processSlider(xpos, ypos, time, objType, hitSound, positionsString, repeats, length, rest, formatVersion)])
                         
                         
