@@ -125,24 +125,16 @@ def convertPathType(input):
 def clamp(val, absmax):
     return max(min(val, absmax), -absmax)
 
-def readPoint(value, startPos, typevar):
+def readPoint(value, startPos):
     vertexSplit = value.split(":")
     pos = numpy.array((zeroFloor(clamp(float(vertexSplit[0]), 131072)), zeroFloor(clamp(float(vertexSplit[1]), 131072))), dtype='single') - startPos
-    return PathControlPoint(list(pos), typevar=typevar)
+    return PathControlPoint(list(pos))
 
 def isLinear(p):
     return numpy.isclose(0, (p[1].Position[1] - p[0].Position[1]) * (p[2].Position[0] - p[0].Position[0]) - (p[1].Position[0] - p[0].Position[0]) * (p[2].Position[1] - p[0].Position[1]))
 
 def convertPoints(points, endPoint, first, offset, formatVersion):
-    typevar = convertPathType(points[0])
-    
-    # Edge-case rules (to match stable)
-    if (typevar == PathControlPoint.PERFECT):
-        if (len(vertices) != 3):
-            typevar = PathControlPoint.BEZIER
-        elif (isLinear(vertices)):
-            typevar = PathControlPoint.LINEAR
-            
+    type = convertPathType(points[0])
     # First control point is zero for the first segment
     readOffset = 1 if first else 0
     # Total points readable from the base point span
@@ -158,11 +150,21 @@ def convertPoints(points, endPoint, first, offset, formatVersion):
     
     # Parse into control points.
     for i in range(1,len(points)):
-        vertices.append(readPoint(points[i], offset, typevar))
+        vertices.append(readPoint(points[i], offset))
     
     # If an endpoint is given, add it to the end.
     if (endPoint != None):
-        vertices.append(readPoint(endPoint, offset, typevar))
+        vertices.append(readPoint(endPoint, offset))
+    
+    # Edge-case rules (to match stable)
+    if (type == PathControlPoint.PERFECT):
+        if (len(vertices) != 3):
+            type = PathControlPoint.BEZIER
+        elif (isLinear(vertices)):
+            type = PathControlPoint.LINEAR
+    
+    for vertex in vertices:
+        vertex.Type = typevar
     
     # A path can have multiple implicit segments of the same type if there are two sequential control points with the same position.
     # To handle such cases, this code may return multiple path segments with the final control point in each segment having a non-null type.
@@ -184,7 +186,7 @@ def convertPoints(points, endPoint, first, offset, formatVersion):
         # Legacy Catmull sliders don't support multiple segments, so adjacent Catmull segments should be treated as a single one.
         # Importantly, this is not applied to the first control point, which may duplicate the slider path's position
         # resulting in a duplicate (0,0) control point in the resultant list.
-        if (typevar == PathControlPoint.CATMULL and endIndex > 1 and formatVersion < 128):
+        if (type == PathControlPoint.CATMULL and endIndex > 1 and formatVersion < 128):
             endIndex += 1
             continue
         
@@ -194,7 +196,7 @@ def convertPoints(points, endPoint, first, offset, formatVersion):
             continue
         
         # Force a type on the last point, and return the current control point set as a segment
-        vertices[endIndex-1].Type = typevar
+        vertices[endIndex-1].Type = type
         segments.append(vertices[startIndex:endIndex])
         
         # Skip the current control point - as it's the same as the one that's just been returned.
