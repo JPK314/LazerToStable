@@ -53,7 +53,7 @@ def main():
             insideTPs = False
             for line in lines[1:]:
                 unchangedline = True
-                if line == "[Timing Points]\n":
+                if line == "[TimingPoints]\n":
                     insideTPs = True
                     FDW.write(line)
                     continue
