@@ -96,12 +96,13 @@ def zeroFloor(x):
 
 def processSlider(xpos, ypos, time, objtype, hitSound, positionsString, repeats, length, rest, formatVersion):
     pos = numpy.array((xpos, ypos), dtype='single')
-    
     segmentsControlPoints = convertPathString(positionsString, pos, formatVersion)
     allPoints = []
     for i in range(len(segmentsControlPoints)):
-        if i < len(segmentsControlPoints) - 1 and len(segmentsControlPoints[i+1]) > 0:
-            allPoints += ConvertToBezierAnchors(segmentsControlPoints[i] + [segmentsControlPoints[i+1][0]])
+        if i > 0 and len(segmentsControlPoints[i-1]) > 0:
+            firstPoint = segmentsControlPoints[i-1][-1]
+            firstPoint.Type = segmentsControlPoints[i][0].Type
+            allPoints += ConvertToBezierAnchors(segmentsControlPoints[i])
         else:
             allPoints += ConvertToBezierAnchors(segmentsControlPoints[i])
     
@@ -166,15 +167,17 @@ def convertPoints(points, endPoint, first, offset, formatVersion):
     # A path can have multiple implicit segments of the same type if there are two sequential control points with the same position.
     # To handle such cases, this code may return multiple path segments with the final control point in each segment having a non-null type.
     # For the point string X|1:1|2:2|2:2|3:3, this code returns the segments:
-    # X: { (1,1), (2, 2) }
-    # X: { (3, 3) }
-    # Note: (2, 2) is not returned in the second segments, as it is implicit in the path.
+    # X: { (1, 1), (2, 2) }
+    # X: { (2, 2), (3, 3) }
+    # Note: in Lazer code, (2, 2) is not returned in the second segment, as it is implicit in the path. However, I want this in the second segment,
+    # so I will modify the code below to achieve this
     startIndex = 0
     endIndex = 1
     
     segments = []
     
-    while(endIndex < len(vertices) - endPointLength):
+    # The conditions of this loop have been modified from the Lazer code so that the end point of a segment is included in the segment itself.
+    while(endIndex < len(vertices)):
         # Keep incrementing while an implicit segment doesn't need to be started
         if (not all(vertices[endIndex].Position == vertices[endIndex - 1].Position)):
             endIndex += 1
@@ -193,10 +196,13 @@ def convertPoints(points, endPoint, first, offset, formatVersion):
             continue
         
         # Return the current control point set as a segment
-        segments.append(vertices[startIndex:endIndex])
+        # In Lazer, zero length segments can be returned by this method. I don't like this so I'm changing it to suit my needs here
+        if startIndex < endIndex:
+            segments.append(vertices[startIndex:endIndex])
         
-        # Skip the current control point - as it's the same as the one that's just been returned.
-        startIndex = endIndex + 1
+        # Lazer would skip the current control point as it's the same as the one that's just been returned. However, this removes it from the following
+        # segment, and I want it in. Therefore we do not skip.
+        startIndex = endIndex
         endIndex += 1
     
     if (endIndex > startIndex):
@@ -218,8 +224,9 @@ def convertPathString(pointString, offset, formatVersion):
             endIndex += 1
             continue
         
-        # Multi-segmented sliders DON'T contain the end point as part of the current segment as it's assumed to be the start of the next segment.
+        # In the Lazer stable code, multi-segmented sliders DON'T contain the end point as part of the current segment as it's assumed to be the start of the next segment.
         # The start of the next segment is the index after the type descriptor.
+        # However, for ease of use for me, I WILL be including the end point.
         endPoint = pointSplit[endIndex+1] if endIndex < len(pointSplit) - 1 else None
         
         segmentsControlPoints += convertPoints(pointSplit[startIndex:endIndex], endPoint, first, offset, formatVersion)
