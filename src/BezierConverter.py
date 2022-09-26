@@ -81,7 +81,8 @@ def ConvertCircleToBezierAnchors(points):
     for i in range(len(arc)):
         arc[i] = numpy.dot(rot, arc[i]) + cs["Centre"]
         
-    # To fix some errors, set the last point of arc to the last point of points
+    # To fix some errors, set the first/last point of arc to the first/last point of points
+    arc[0] = points[0]
     arc[-1] = points[-1]
     return arc
     
