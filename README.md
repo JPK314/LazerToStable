@@ -3,7 +3,7 @@
 Convert osu!lazer beatmaps to a format compatible with legacy version of the game (v128 -> v14).
 
 ## Requirements
-* Python 3 (tested with v3.10.6, but )
+* Python 3 (tested with v3.10.6)
 * numpy
 
 ## Usage
