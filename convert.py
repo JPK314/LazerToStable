@@ -31,7 +31,8 @@ def main():
 
 def convert_single_file(path):
     original_path = pathlib.PurePath(path)
-    backup_path = pathlib.PurePath(path).with_name(original_path.name + ".backup")
+    backup_path = pathlib.PurePath(path).with_name(
+        original_path.name + ".backup")
 
     file = path.open(encoding='utf8')
     osu_file = parse_osu_file_from_string(file.read())
@@ -45,7 +46,8 @@ def convert_single_file(path):
 
 def convert_package(path):
     original_path = pathlib.PurePath(path)
-    backup_path = pathlib.PurePath(path).with_name(original_path.name + ".backup")
+    backup_path = pathlib.PurePath(path).with_name(
+        original_path.name + ".backup")
 
     shutil.move(str(original_path), str(backup_path))
 
@@ -53,23 +55,27 @@ def convert_package(path):
         for info in zip_in.infolist():
             with zip_in.open(info) as file:
                 if info.filename.lower().endswith(".osu"):
-                    osu_file = parse_osu_file_from_string(file.read().decode("utf-8"))
+                    osu_file = parse_osu_file_from_string(
+                        file.read().decode("utf-8"))
                     converted_osu_file = process_osu_file(osu_file)
-                    zip_out.writestr(info.filename, converted_osu_file.to_string())
+                    zip_out.writestr(
+                        info.filename, converted_osu_file.to_string())
                 else:
                     zip_out.writestr(info.filename, file.read())
 
 
 def process_osu_file(osu_file: OsuFile) -> OsuFile:
     new_sections = deepcopy(osu_file.sections)
-    new_sections['TimingPoints'] = map(process_timing_point_line, osu_file.sections['TimingPoints'])
-    new_sections['HitObjects'] = map(lambda line: process_hit_object_line(line, osu_file.version), osu_file.sections['HitObjects'])
+    new_sections['TimingPoints'] = map(
+        process_timing_point_line, osu_file.sections['TimingPoints'])
+    new_sections['HitObjects'] = map(lambda line: process_hit_object_line(
+        line, osu_file.version), osu_file.sections['HitObjects'])
     return OsuFile('14', new_sections)
 
 
 def process_timing_point_line(line: str) -> str:
     parts = line.split(",")
-    return "%d,%s" % (int(numpy.floor(float(parts[0]))),",".join(parts[1:]))
+    return "%d,%s" % (int(numpy.floor(float(parts[0]))), ",".join(parts[1:]))
 
 
 def process_hit_object_line(line: str, format_version: str) -> str:
