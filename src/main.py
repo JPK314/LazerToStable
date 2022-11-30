@@ -1,113 +1,28 @@
 import numpy
-import os
-import re
 from src.PathControlPoint import PathControlPoint
-from src.SliderPath import SliderPath
 from src.BezierConverter import ConvertToBezierAnchors
 
-def main():
-    for file in os.listdir("."):
-        if file.endswith(".osu"):
-            FD = open(file, 'r', encoding="utf8")
-            lines = FD.readlines()
-            sliders = []
-            formatVersion = int(re.search(r"osu file format v(\d+)$", lines[0]).group(1))
-                    
-            # Searching for sliders
-            insideHOs = False
-            for line in lines:
-                if line == "[HitObjects]\n":
-                    insideHOs = True
-                    continue
-                if insideHOs and line == "\n":
-                    insideHOs = False
-                    
-                if insideHOs:
-                    strspl = line.split(",")
-                    xpos = zeroFloor(clamp(float(strspl[0]), 131072))
-                    ypos = zeroFloor(clamp(float(strspl[1]), 131072))
-                    time = float(strspl[2])
-                    objType = clamp(int(strspl[3]), 131072)
-                    if (objType & 2):
-                        hitSound = clamp(int(strspl[4]), 131072)
-                        positionsString = strspl[5]
-                        repeats = clamp(int(strspl[6]), 131072)
-                        length = None
-                        if (len(strspl) > 7):
-                            length = max((0, clamp(float(strspl[7]), 131072)))
-                            if (length == 0):
-                                length = None
-                        
-                        rest = ",".join(strspl[8:])
-                        sliders.append([line, processSlider(xpos, ypos, time, objType, hitSound, positionsString, repeats, length, rest, formatVersion)])
-                        
-                        
-            # Making new .osu file
-            FDW = open(file[:-5]+"-STABLE].osu", 'w', encoding="utf8")
-            FDW.write("osu file format v14\n")
-            unchangedline = True
-            insideHOs = False
-            insideTPs = False
-            for line in lines[1:]:
-                unchangedline = True
-                if line == "[TimingPoints]\n":
-                    insideTPs = True
-                    FDW.write(line)
-                    continue
-                if insideTPs and line == "\n":
-                    insideTPs = False
-                if line == "[HitObjects]\n":
-                    insideHOs = True
-                    FDW.write(line)
-                    continue
-                if insideHOs and line == "\n":
-                    insideHOs = False
-                
-                if insideTPs:
-                    strspl = line.split(",")
-                    unchangedline = False
-                    FDW.write("%d,%s" % (int(numpy.floor(float(strspl[0]))), ",".join(strspl[1:])))
-                
-                if insideHOs:
-                    strspl = line.split(",")
-                    objType = clamp(int(strspl[3]), 131072)
-                    if (objType & 2):
-                        unchangedline = False
-                        matchingsliders = [x[1] for x in sliders if x[0] == line]
-                        if matchingsliders:
-                            s = matchingsliders[0]
-                            FDW.write("%d,%d,%d,%d,%d,B|%s,%d,%f,%s" % (s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], s[8]))
-                        else:
-                            FDW.write(line)
-                        
-                match = re.search(r"^Version:(.*)$", line)
-                if match:
-                    unchangedline = False
-                    FDW.write("Version:%s-STABLE\n" % match.group(1))
-                    
-                if unchangedline:
-                    FDW.write(line)
-                    
-            FDW.close()
-            FD.close()
-
 def zeroFloor(x):
-    return numpy.floor(x) + (0 if x >= 0 else 1)
+    return int(numpy.floor(x) + (0 if x >= 0 else 1))
 
-def processSlider(xpos, ypos, time, objtype, hitSound, positionsString, repeats, length, rest, formatVersion):
-    pos = numpy.array((xpos, ypos), dtype='single')
-    segmentsControlPoints = convertPathString(positionsString, pos, formatVersion)
-    allPoints = []
-    for i in range(len(segmentsControlPoints)):
-        if i > 0 and len(segmentsControlPoints[i-1]) > 0:
-            firstPoint = segmentsControlPoints[i-1][-1]
-            firstPoint.Type = segmentsControlPoints[i][0].Type
-            allPoints += ConvertToBezierAnchors(segmentsControlPoints[i])
+def processSlider(x, y, path, version):
+    pos = numpy.array((x, y), dtype='single')
+    segments_control_points = convertPathString(path, pos, version)
+
+    # if there's only one segment - we don't need to process it
+    if len(segments_control_points) == 1:
+        return path
+
+    all_points = []
+    for i in range(len(segments_control_points)):
+        if i > 0 and len(segments_control_points[i-1]) > 0:
+            first_point = segments_control_points[i-1][-1]
+            first_point.Type = segments_control_points[i][0].Type
+            all_points += ConvertToBezierAnchors(segments_control_points[i])
         else:
-            allPoints += ConvertToBezierAnchors(segmentsControlPoints[i])
-    
-        
-    return (xpos, ypos, time, objtype, hitSound, "|".join(["%d:%d" % (int(numpy.round((x[0]))), int(numpy.round((x[1])))) for x in allPoints]), repeats, length, rest)
+            all_points += ConvertToBezierAnchors(segments_control_points[i])
+
+    return "B|" + "|".join(["%d:%d" % (int(numpy.round((x[0]))), int(numpy.round((x[1])))) for x in all_points])
 
 def convertPathType(input):
     if (input[0] == "C"):
@@ -238,6 +153,3 @@ def convertPathString(pointString, offset, formatVersion):
         segmentsControlPoints += convertPoints(pointSplit[startIndex:endIndex], None, first, offset, formatVersion)
         
     return segmentsControlPoints
-        
-if __name__ == "__main__":
-    main()

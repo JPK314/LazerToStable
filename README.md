@@ -1,7 +1,26 @@
-# LazerToStable
+# Lazer 2 Stable
 
-A working converter from file format v128 (current lazer) to file format v14 (stable). Place your .osu file(s) you want to convert into the folder with README.md, and run with
-```
-python -m src.main
-```
-on the command line from the folder containing the README.
+Convert osu!lazer beatmaps to a format compatible with legacy version of the game (v128 -> v14).
+
+## Requirements
+* Python 3 (tested with v3.10.6)
+* numpy
+
+## Usage
+0. If you don't have numpy installed, run this command:
+    ```commandline
+    pip install numpy
+    ```
+1. Clone the repository.
+    ```commandline
+    git clone https://github.com/ekgame/lazer-2-stable.git
+    ```
+2. Run the script
+    ```commandline
+    cd lazer-2-stable
+    python convert.py <path to file>
+    ```
+
+The file may be either a plaintext .osu beatmap file or a .osz mapset archive. For .osz archives - all the .osu files inside will be converted and the other files are copied verbatim.
+
+The original file will be copied as a backup and replaced with the converted version.
