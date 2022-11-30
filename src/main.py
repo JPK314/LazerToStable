@@ -1,6 +1,6 @@
 import numpy
-from src.PathControlPoint import PathControlPoint
-from src.BezierConverter import convert_to_bezier_anchors
+from src.path_control_point import PathControlPoint
+from src.bezier_converter import convert_to_bezier_anchors
 
 
 def zero_floor(x):
