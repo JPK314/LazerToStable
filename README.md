@@ -1,4 +1,4 @@
-# Lazer 2 Stable
+# Lazer To Stable
 
 Convert osu!lazer beatmaps to a format compatible with legacy version of the game (v128 -> v14).
 

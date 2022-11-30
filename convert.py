@@ -1,7 +1,7 @@
 from copy import deepcopy
 from src.osu import parse_osu_file_from_string, OsuFile
 import numpy
-from src.main import zeroFloor, clamp, processSlider
+from src.main import zero_floor, clamp, process_slider
 import argparse
 import pathlib
 import shutil
@@ -85,8 +85,8 @@ def process_hit_object_line(line: str, format_version: str) -> str:
         # not a slider, do not convert
         return line
 
-    x = zeroFloor(clamp(float(parts[0]), 131072))
-    y = zeroFloor(clamp(float(parts[1]), 131072))
+    x = zero_floor(clamp(float(parts[0]), 131072))
+    y = zero_floor(clamp(float(parts[1]), 131072))
     timestamp = int(numpy.floor(float(parts[2])))
     hit_sound = clamp(int(parts[4]), 131072)
     path = parts[5]
@@ -99,7 +99,7 @@ def process_hit_object_line(line: str, format_version: str) -> str:
     rest = ",".join(parts[8:])
 
     # most of the magic happens here
-    new_path = processSlider(x, y, path, format_version)
+    new_path = process_slider(x, y, path, format_version)
     return ','.join(map(str, [x, y, timestamp, object_type, hit_sound, new_path, repeats, length, rest]))
 
 
