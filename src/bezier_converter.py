@@ -153,8 +153,8 @@ def convert_catmull_to_bezier_anchors(points):
         v4 = points[i+2] if i < len(points) - 2 else v3 + v3 - v2
         cubics.append((-v1 + 6 * v2 + v3) / 6)
         cubics.append((-v4 + 6 * v3 + v2) / 6)
-        cubics.add(v3)
-        cubics.add(v3)
+        cubics.append(v3)
+        cubics.append(v3)
     cubics = cubics[:-1]
     return cubics
 
